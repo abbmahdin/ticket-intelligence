@@ -41,7 +41,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: uvicorn src.api.routes:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
   celery_worker:
     build: .
