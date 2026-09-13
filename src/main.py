@@ -11,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import settings
 from src.database import close_db, init_db
+from src.api.routes import api as api_router
+from src.api.routes import api as api_router
 
 
 @asynccontextmanager
@@ -56,3 +58,7 @@ async def root():
         "version": "0.1.0",
         "docs": "/docs",
     }
+
+
+# Routes
+app.include_router(api_router)
