@@ -39,7 +39,7 @@ cp .env.example .env
 docker compose up -d postgres redis
 
 # 5. Lancer l'API
-.venv/bin/uvicorn src.api.routes:app --host 0.0.0.0 --port 8000 --reload
+.venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 L'API est disponible sur http://localhost:8000.
