@@ -1,0 +1,24 @@
+# Dépendances Modal — version allégée (sans torch/transformers, non importés
+# au niveau module dans app/). L'image est ~10x plus légère et se construit
+# en 1-2 min au lieu de 10+. Les détecteurs HF chargent torch paresseusement
+# (hf_cache), jamais à l'import : ils ne sont pas nécessaires pour que le bot
+# micro et le web de santé démarrent.
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy[asyncio]>=2.0.36
+asyncpg>=0.30.0
+alembic>=1.14.0
+APScheduler>=3.10.4,<4.0
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+loguru>=0.7.3
+httpx>=0.28.0
+tenacity>=9.0.0
+python-dotenv>=1.0.1
+pandas>=2.0
+numpy>=1.26
+scipy>=1.12
+matplotlib>=3.8
+pillow>=10.0
+jinja2>=3.1.0
+qrcode[pil]>=7.4

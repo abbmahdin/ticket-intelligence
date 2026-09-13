@@ -1,0 +1,312 @@
+{
+  "name": "SportsBot \u2192 Multi-canal (Discord / Sheets / Pushover / IA / Stripe)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sportsbot-signal",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "SportsBot Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 300],
+      "webhookId": "sportsbot-signal"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "value",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": false,
+              "outputKey": "value"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "strict" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "result",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": false,
+              "outputKey": "result"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Switch par type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [-260, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "webhookUri": "={{ $env.DISCORD_WEBHOOK }}",
+        "contentJson": "={ \"username\": \"SportsBot\", \"embeds\": [ { \"title\": \"\ud83d\udd0d VALUE D\u00c9TECT\u00c9E\", \"color\": 3447003, \"fields\": [ { \"name\": \"Match\", \"value\": \"{{ $json.body.match }}\", \"inline\": true }, { \"name\": \"March\u00e9 (issue)\", \"value\": \"{{ $json.body.issue }}\", \"inline\": true }, { \"name\": \"Bookmaker\", \"value\": \"{{ $json.body.bookmaker }}\", \"inline\": true }, { \"name\": \"Cote\", \"value\": \"{{ $json.body.cote }}\", \"inline\": true }, { \"name\": \"Proba mod\u00e8le\", \"value\": \"{{ ($json.body.proba * 100).toFixed(1) }}%\", \"inline\": true }, { \"name\": \"VALUE\", \"value\": \"{{ ($json.body.value * 100).toFixed(1) }}%\", \"inline\": true }, { \"name\": \"Stake\", \"value\": \"{{ $json.body.stake }}\", \"inline\": true }, { \"name\": \"Direction\", \"value\": \"{{ $json.body.direction }}\", \"inline\": true }, { \"name\": \"Signal ID\", \"value\": \"{{ $json.body.signal_id }}\", \"inline\": false } ], \"timestamp\": \"{{ $now.toISO() }}\" } ] }",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Discord (signal)",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [20, 120],
+      "credentials": {
+        "discordWebhookApi": { "id": "DISCORD_WEBHOOK_CRED", "name": "Discord Webhook" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": { "mode": "id", "value": "={{ $env.GOOGLE_SHEET_ID }}" },
+        "sheetName": { "mode": "name", "value": "Journal des paris" },
+        "columns": {
+          "mappingMode": "manual",
+          "value": {
+            "match": "={{ $json.body.match }}",
+            "issue": "={{ $json.body.issue }}",
+            "cote": "={{ $json.body.cote }}",
+            "proba": "={{ $json.body.proba }}",
+            "value": "={{ $json.body.value }}",
+            "stake": "={{ $json.body.stake }}",
+            "timestamp": "={{ $now.toISO() }}",
+            "status": "pending",
+            "signal_id": "={{ $json.body.signal_id }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Google Sheets (append)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [20, 320],
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "GOOGLE_SHEETS_CRED", "name": "Google Sheets OAuth2" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pushover.net/1/messages.json",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"token\": \"{{ $env.PUSHOVER_TOKEN }}\", \"user\": \"{{ $env.PUSHOVER_USER }}\", \"title\": \"SportsBot \u2014 VALUE\", \"message\": \"{{ $json.body.match }} | {{ $json.body.issue }} @ {{ $json.body.cote }} | VALUE {{ ($json.body.value * 100).toFixed(1) }}% | stake {{ $json.body.stake }}\", \"priority\": 1 }",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000005",
+      "name": "Pushover (push)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [20, 520]
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "create",
+        "model": "={{ $env.OPENAI_MODEL || 'gpt-4o-mini' }}",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Tu es un assistant SportsBot. R\u00e9dige UNE phrase de contexte (max 240 caract\u00e8res, en fran\u00e7ais) sur le match et la pertinence de la cote value. Sois factuel, sans promesse de gain."
+            },
+            {
+              "role": "user",
+              "content": "Match: {{ $json.body.match }} | March\u00e9: {{ $json.body.issue }} | Cote: {{ $json.body.cote }} | Proba mod\u00e8le: {{ ($json.body.proba * 100).toFixed(1) }}% | VALUE: {{ ($json.body.value * 100).toFixed(1) }}%"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000006",
+      "name": "IA commentaire (OpenAI)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.3,
+      "position": [300, 320],
+      "credentials": {
+        "openAiApi": { "id": "OPENAI_CRED", "name": "OpenAI API" }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "webhookUri": "={{ $env.DISCORD_WEBHOOK }}",
+        "contentJson": "={ \"username\": \"SportsBot \u2014 IA\", \"content\": \"\ud83e\uddea {{ $json.body.match }} \\u2192 {{ $json.choices[0].message.content }}\" }",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000007",
+      "name": "Discord (IA commentaire)",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [580, 320],
+      "credentials": {
+        "discordWebhookApi": { "id": "DISCORD_WEBHOOK_CRED", "name": "Discord Webhook" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": { "mode": "id", "value": "={{ $env.GOOGLE_SHEET_ID }}" },
+        "sheetName": { "mode": "name", "value": "Journal des paris" },
+        "updateBy": "calculated",
+        "columnToMatchOn": "signal_id",
+        "valueToMatchOn": "={{ $json.body.signal_id }}",
+        "columns": {
+          "mappingMode": "manual",
+          "value": {
+            "status": "={{ $json.body.result }}",
+            "pnl": "={{ $json.body.pnl }}",
+            "settled_at": "={{ $json.body.settled_at }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000008",
+      "name": "Google Sheets (update result)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [20, 760],
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "GOOGLE_SHEETS_CRED", "name": "Google Sheets OAuth2" }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-webhook",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000009",
+      "name": "Stripe Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 900],
+      "webhookId": "stripe-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.type }}",
+              "rightValue": "checkout.session.completed",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-4000-8000-00000000000a",
+      "name": "Stripe: paiement confirm\u00e9 ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-260, 900]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://discord.com/api/v10/guilds/{{ $env.DISCORD_GUILD_ID }}/members/{{ $json.body.data.object.metadata.discord_user_id || $env.DISCORD_DEFAULT_USER }}/roles/{{ $env.DISCORD_ABONNE_ROLE_ID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Authorization", "value": "Bot {{ $env.DISCORD_BOT_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-00000000000b",
+      "name": "Discord: add role Abonn\u00e9",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [20, 900]
+    }
+  ],
+  "connections": {
+    "SportsBot Webhook": {
+      "main": [
+        [
+          { "node": "Switch par type", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Switch par type": {
+      "main": [
+        [
+          { "node": "Discord (signal)", "type": "main", "index": 0 },
+          { "node": "Google Sheets (append)", "type": "main", "index": 0 },
+          { "node": "Pushover (push)", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Google Sheets (update result)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Google Sheets (append)": {
+      "main": [
+        [
+          { "node": "IA commentaire (OpenAI)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "IA commentaire (OpenAI)": {
+      "main": [
+        [
+          { "node": "Discord (IA commentaire)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Stripe Webhook": {
+      "main": [
+        [
+          { "node": "Stripe: paiement confirm\u00e9 ?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Stripe: paiement confirm\u00e9 ?": {
+      "main": [
+        [
+          { "node": "Discord: add role Abonn\u00e9", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false,
+  "tags": [
+    { "id": "tag-sportsbot", "name": "sportsbot" },
+    { "id": "tag-n8n", "name": "n8n" }
+  ],
+  "pinData": {},
+  "versionId": "v1-sportsbot-n8n-2026-07-19",
+  "meta": { "templateId": "sportsbot-n8n-multicanal", "instanceId": "sportsbot" },
+  "id": "sportsbot-n8n-workflow-001"
+}

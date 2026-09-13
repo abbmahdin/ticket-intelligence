@@ -1,0 +1,23 @@
+{
+  "started_at": "2026-07-30T16:23:53.715941+00:00",
+  "stopped_at": "2026-07-30T16:24:30.351483+00:00",
+  "trigger": "signal",
+  "total_changes": 0,
+  "changes": [],
+  "git_snapshots": [
+    {
+      "timestamp": "2026-07-30T16:23:53.685487+00:00",
+      "branch": "fix/ai-layer-telegram-mt5-outcomes",
+      "status": "",
+      "diff_stat": "",
+      "log": "fd90c86 fix: une strategie active sans parametres optimises se signale\n080d14f test: aucun nom indefini ne doit atteindre la production\n5bf18b0 fix: window_days supprime par erreur dans _load_timeframe\n62fce02 fix: le hors-echantillon walk-forward ne pouvait contenir aucune fenetre\n35129a1 fix: l'ancre de test ne vieillit plus jusqu'a sortir de la retention\n25b13dd feat: add insufficient_oos_trades flag and 7-day retention\nae299f0 fix: deduplicate recent n8n failure alerts\n6cf989f fix: les bornes de stop suivent le prix au lieu d'un montant fige\nc8f67a2 fix: une seule valeur d'armement, lue au meme endroit\nd45d49a fix: le backtest exige le remplissage, comme le live\n"
+    },
+    {
+      "timestamp": "2026-07-30T16:24:23.974956+00:00",
+      "branch": "fix/ai-layer-telegram-mt5-outcomes",
+      "status": "",
+      "diff_stat": "",
+      "log": "fd90c86 fix: une strategie active sans parametres optimises se signale\n080d14f test: aucun nom indefini ne doit atteindre la production\n5bf18b0 fix: window_days supprime par erreur dans _load_timeframe\n62fce02 fix: le hors-echantillon walk-forward ne pouvait contenir aucune fenetre\n35129a1 fix: l'ancre de test ne vieillit plus jusqu'a sortir de la retention\n25b13dd feat: add insufficient_oos_trades flag and 7-day retention\nae299f0 fix: deduplicate recent n8n failure alerts\n6cf989f fix: les bornes de stop suivent le prix au lieu d'un montant fige\nc8f67a2 fix: une seule valeur d'armement, lue au meme endroit\nd45d49a fix: le backtest exige le remplissage, comme le live\n"
+    }
+  ]
+}
